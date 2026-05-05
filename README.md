@@ -3,6 +3,48 @@
 实验采用 Ubuntu 22.04 系统，硬件为 NVIDIA RTX 4090 (48GB)，软件环境配置 Python 3.12、PyTorch 2.7.0、CUDA 12.8，基于 Ultralytics YOLO11 框架开展训练。训练参数设置如下：输入图像尺寸 200×200，批次大小 16，最大训练轮数 200，采用 SGD 优化器，初始学习率 0.01，动量 0.937，权重衰减 0.0005，并使用 Mosaic、随机翻转、随机擦除等数据增强策略，开启混合精度与数据缓存加速训练。
 
 **实验结果**
+1. NEU-DET 数据集上不同模块的消融研究（M1：RGA；M2：MDLA；M3：BiFN）
+1.1. baseline:下采样功能用nn.AvgPool2d 替代（无卷积、纯池化），模型为yaml/baseline.yaml，训练结果得到runs/detect/baseline
+1.2. baseline+M1:对1.1中模型训练得到的结果Recall<0.5进行RGA重构，小于0.5的只有crazing，模型同1.1，训练结果得到runs/detect/baseline+M1
+1.3. baseline+M1+M2:MDLA多膨胀局部注意力进行模型缝合，在ultralytics/nn/modules/block.py中添加class MDLA,然后在同级文件夹中的_init_.py和上一级文件夹中的task.py进行注册，模型为yaml/baseline+M1+M2.yaml，训练结果得到runs/detect/baseline+M1+M2,代码如下：
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class MDLA(nn.Module):
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1):
+        super().__init__()
+        assert c1 == c2
+        self.c = c1
+        self.heads = 4  # 固定头数
+        self.dilation_list = [1, 2, 3, 4]
+        
+        # 1x1 卷积
+        self.qkv = nn.Conv2d(self.c, self.c * 3, 1, bias=False)
+        self.proj = nn.Conv2d(self.c, self.c, 1, bias=False)
+
+    def forward(self, x):
+        B, C, H, W = x.shape
+        qkv = self.qkv(x).chunk(3, 1)  # [B, 3C, H, W]
+        q, k, v = map(lambda t: t.view(B, self.heads, C//self.heads, H*W), qkv)
+
+        # 正确维度拼接
+        out = 0
+        for d in self.dilation_list:
+            attn = (q @ k.transpose(-2, -1)) * (1.0 / (q.size(-1) ** 0.5))
+            attn = F.softmax(attn, dim=-1)
+            out = out + (attn @ v)
+        
+        # 维度恢复（核心修复）
+        out = out.view(B, C, H, W)
+        out = self.proj(out)
+        return x + out
+```
+1.4. baseline+M1+M2+M3(conv):
+    
+   
+   
 <img width="850" height="169" alt="image" src="https://github.com/user-attachments/assets/bb111623-ece3-4630-aaea-6ba3e82a5c20" />
 
 
