@@ -1,0 +1,25 @@
+
+Benchmarks complete for runs/detect/baseline+M1+M2/weights/best.pt on coco8.yaml at imgsz=224 (129.70s)
+Benchmarks legend:  - ✅ Success  - ❎ Export passed but validation failed  - ❌️ Export failed
++-----------------------------------------------------------------------------------------------------------+
+|      Format                  Status❔   Size (MB)   metrics/mAP50-95(B)   Inference time (ms/im)   FPS    |
++===========================================================================================================+
+| 1    PyTorch                 ✅         6.0         0.0                   19.72                    50.71  |
+| 2    TorchScript             ✅         11.9        0.0                   3.69                     270.92 |
+| 3    ONNX                    ✅         10.1        0.0                   2.68                     372.88 |
+| 4    OpenVINO                ❌         0.0         -                     -                        -      |
+| 5    TensorRT                ✅         13.1        0.0                   1.14                     877.57 |
+| 6    CoreML                  ❌         0.0         -                     -                        -      |
+| 7    TensorFlow SavedModel   ✅         25.4        0.0                   115.76                   8.64   |
+| 8    TensorFlow GraphDef     ✅         10.1        0.0                   111.72                   8.95   |
+| 9    TensorFlow Lite         ❌         0.0         -                     -                        -      |
+| 10   TensorFlow Edge TPU     ❌         0.0         -                     -                        -      |
+| 11   TensorFlow.js           ❌         0.0         -                     -                        -      |
+| 12   PaddlePaddle            ❌         0.0         -                     -                        -      |
+| 13   MNN                     ✅         10.1        0.0                   18.77                    53.28  |
+| 14   NCNN                    ✅         10.1        0.0                   521.92                   1.92   |
+| 15   IMX                     ❌         0.0         -                     -                        -      |
+| 16   RKNN                    ❌         0.0         -                     -                        -      |
+| 17   ExecuTorch              ❌         0.0         -                     -                        -      |
+| 18   Axelera AI              ❌         0.0         -                     -                        -      |
++-----------------------------------------------------------------------------------------------------------+
