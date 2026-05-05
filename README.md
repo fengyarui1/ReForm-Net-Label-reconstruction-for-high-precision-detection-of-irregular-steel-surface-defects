@@ -3,7 +3,8 @@
 实验采用 Ubuntu 22.04 系统，硬件为 NVIDIA RTX 4090 (48GB)，软件环境配置 Python 3.12、PyTorch 2.7.0、CUDA 12.8，基于 Ultralytics YOLO11 框架开展训练。训练参数设置如下：输入图像尺寸 200×200，批次大小 16，最大训练轮数 200，采用 SGD 优化器，初始学习率 0.01，动量 0.937，权重衰减 0.0005，并使用 Mosaic、随机翻转、随机擦除等数据增强策略，开启混合精度与数据缓存加速训练。
 
 **实验结果**
-<img width="637" height="151" alt="image" src="https://github.com/user-attachments/assets/9ddc34da-6098-4592-8aee-81362f547514" />
+<img width="850" height="169" alt="image" src="https://github.com/user-attachments/assets/bb111623-ece3-4630-aaea-6ba3e82a5c20" />
+
 
 <img width="413" height="151" alt="image" src="https://github.com/user-attachments/assets/dba6b27a-380a-4f74-8000-c3379ef3772b" />
 
