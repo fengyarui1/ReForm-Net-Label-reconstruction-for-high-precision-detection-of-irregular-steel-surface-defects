@@ -4,7 +4,7 @@
 
 **实验结果**
 
-1.NEU-DET 数据集上不同模块的消融研究（M1：RGA；M2：MDLA；M3：BiFN）
+1. NEU-DET 数据集上不同模块的消融研究（M1：RGA；M2：MDLA；M3：BiFN）
 
 1.1. baseline
 
@@ -76,7 +76,7 @@ class SCDown(nn.Module):
 
 RGA标签重构可显著提升YOLO11的检测精度，在此基础上引入MDLA模块能进一步提升mAP50，而BiFN却导致实验结果的下降。
 <img width="850" height="169" alt="image" src="https://github.com/user-attachments/assets/bb111623-ece3-4630-aaea-6ba3e82a5c20" />
-2.NEU-DET 数据集上的网格实验
+2. NEU-DET 数据集上的网格实验
 
 RGA标签重构代码如下，改变标签类别只需修改BOTTLENECK_CLASSES的值，值从0开始以此代表以下数组中的元素：['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']；改变重构的维数只需要修改GRID_SIZE的值。
 ```python
@@ -198,8 +198,26 @@ print(f"瓶颈类别 ID: {sorted(BOTTLENECK_CLASSES)}")
 <img width="413" height="151" alt="image" src="https://github.com/user-attachments/assets/dba6b27a-380a-4f74-8000-c3379ef3772b" />
 3. NEU-DET 数据集上θ的敏感性分析
 在1.1中各类别标签进行评估后的Recall为：['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']=[0.182,0.745,0.884,0.721,0.632,0.951],因此θ取值为[0.5,0.7,0.9]。
+
+RGA重构选择的网格数都是为2x2。
+
 3.1. θ为0.5与1.3对应。
-3.2. θ
+
+3.2. θ为0.7
+
+进行RGA重构的有crazing,rolled-in_scale。
+<img width="1182" height="352" alt="image" src="https://github.com/user-attachments/assets/aa5c294e-d903-4f07-ac63-7239092b32d8" />
+
+3.3. θ为0.9
+
+进行RGA重构的有crazing,inclusion,patches,pitted_surface,rolled-in_scale。
+<img width="1180" height="352" alt="image" src="https://github.com/user-attachments/assets/c8a84458-daa0-4324-bea4-2a365dde5f8a" />
+
+3.4. 总结
+
+随着 θ 取值从 0.5 提升至 0.9，标签数量显著增加，模型 mAP50 也随之从 0.821 提升至 0.921，精度提升明显，同时 FPS 也同步上升。
+
+
 <img width="355" height="121" alt="image" src="https://github.com/user-attachments/assets/d666a51a-d7c9-4296-9744-ef453cf2ac61" />
 
 
