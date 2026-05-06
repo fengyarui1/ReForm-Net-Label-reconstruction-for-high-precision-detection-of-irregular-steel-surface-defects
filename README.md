@@ -195,7 +195,8 @@ print(f"瓶颈类别 ID: {sorted(BOTTLENECK_CLASSES)}")
 2.3. 总结
 
 2×2 网格划分的 RGA 标签重构效果最优，相比无网格基线，mAP50 从 0.73 提升至 0.821，同时推理速度也有提升，而更高的 4×4、6×6 网格划分会因标签冗余或特征过碎导致精度下降。
-<img width="413" height="151" alt="image" src="https://github.com/user-attachments/assets/dba6b27a-380a-4f74-8000-c3379ef3772b" />
+<img width="371" height="151" alt="image" src="https://github.com/user-attachments/assets/af5c2bcf-3258-4220-8dc6-af45055891a1" />
+
 3. NEU-DET 数据集上θ的敏感性分析
 
 在1.1中各类别标签进行评估后的Recall为：['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']=[0.182,0.745,0.884,0.721,0.632,0.951],因此θ取值为[0.5,0.7,0.9]。
