@@ -4,7 +4,7 @@
 
 **实验结果**
 
-1. NEU-DET 数据集上不同模块的消融研究（M1：RGA；M2：MDLA；M3：BiFN）
+1.NEU-DET 数据集上不同模块的消融研究（M1：RGA；M2：MDLA；M3：BiFN）
 
 1.1. baseline
 
@@ -64,7 +64,7 @@ class SCDown(nn.Module):
         super().__init__()
         # 1x1 卷积（通道变换）
         self.pw = Conv(c1, c2, 1, 1)
-        # 3x3 卷积（空间下采样，不使用 groups）
+        # 3x3 卷积（空间下采样）
         self.dw = Conv(c2, c2, k, s, autopad(k))
 
     def forward(self, x):
@@ -85,7 +85,7 @@ import numpy as np
 
 # ===================== 配置 =====================
 BOTTLENECK_CLASSES = {0,4}  # 瓶颈类别
-GRID_SIZE =  2 # 论文里的2×2网格划分
+GRID_SIZE =  2 # 2×2网格划分
 
 # 原始标签路径
 INPUT_TRAIN = "./NEU-DET/labels/train_original"
@@ -137,7 +137,7 @@ def rga_reform_grid(txt_path, save_path):
                 if cls not in BOTTLENECK_CLASSES:
                     continue
 
-                # 计算网格和缺陷框的IOU（简化版交集判断）
+                # 计算网格和缺陷框的IOU（交集判断）
                 # 网格坐标
                 gx1, gy1 = gx - gw/2, gy - gh/2
                 gx2, gy2 = gx + gw/2, gy + gh/2
@@ -152,10 +152,10 @@ def rga_reform_grid(txt_path, save_path):
                 iy2 = min(gy2, by2)
 
                 if ix1 < ix2 and iy1 < iy2:
-                    overlap_cls = cls  # 保存实际的类别ID，而不是固定0
+                    overlap_cls = cls  # 保存实际的类别ID
                     break
 
-            # 4. 如果有交集，就给这个网格打上【原类别标签】
+            # 4. 如果有交集，就给这个网格打上原类别标签
             if overlap_cls is not None:
                 new_lines.append(f"{overlap_cls} {gx:.6f} {gy:.6f} {gw:.6f} {gh:.6f}")
 
@@ -197,6 +197,7 @@ print(f"瓶颈类别 ID: {sorted(BOTTLENECK_CLASSES)}")
 2×2 网格划分的 RGA 标签重构效果最优，相比无网格基线，mAP50 从 0.73 提升至 0.821，同时推理速度也有提升，而更高的 4×4、6×6 网格划分会因标签冗余或特征过碎导致精度下降。
 <img width="413" height="151" alt="image" src="https://github.com/user-attachments/assets/dba6b27a-380a-4f74-8000-c3379ef3772b" />
 3. NEU-DET 数据集上θ的敏感性分析
+
 在1.1中各类别标签进行评估后的Recall为：['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']=[0.182,0.745,0.884,0.721,0.632,0.951],因此θ取值为[0.5,0.7,0.9]。
 
 RGA重构选择的网格数都是为2x2。
