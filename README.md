@@ -75,7 +75,9 @@ class SCDown(nn.Module):
 1.6. 总结
 
 RGA标签重构可显著提升YOLO11的检测精度，在此基础上引入MDLA模块能进一步提升mAP50，而BiFN却导致实验结果的下降。
-<img width="850" height="169" alt="image" src="https://github.com/user-attachments/assets/bb111623-ece3-4630-aaea-6ba3e82a5c20" />
+
+<img width="850" height="193" alt="image" src="https://github.com/user-attachments/assets/3f8f530a-7e01-45ca-868c-4596c59d3fa1" />
+
 2. NEU-DET 数据集上的网格实验
 
 RGA标签重构代码如下，改变标签类别只需修改BOTTLENECK_CLASSES的值，值从0开始以此代表以下数组中的元素：['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']；改变重构的维数只需要修改GRID_SIZE的值。
