@@ -93,7 +93,8 @@ class SCDown(nn.Module):
 
 RGA标签重构可显著提升YOLO11的检测精度，在此基础上引入MDLA模块能进一步提升mAP50，而BiFN却导致实验结果的下降。
 
-<img width="850" height="193" alt="image" src="https://github.com/user-attachments/assets/3f8f530a-7e01-45ca-868c-4596c59d3fa1" />
+<img width="850" height="193" alt="image" src="https://github.com/user-attachments/assets/0ae49d9f-1b5d-44df-9eb9-6d3d5cbad28a" />
+
 
 2. NEU-DET 数据集上的网格实验
 
@@ -208,13 +209,17 @@ print(f"瓶颈类别 ID: {sorted(BOTTLENECK_CLASSES)}")
 2.2. 4x4和6x6
 
 模型为yaml/baseline+M1+M2.yaml，训练结果分别得到runs/detect/baseline+M1+M2(16)和runs/detect/baseline+M1+M2(16)
+
 <img width="1178" height="335" alt="image" src="https://github.com/user-attachments/assets/5bf64e61-b529-43ab-8bf9-0f2bf663910a" />
 
 <img width="1201" height="363" alt="image" src="https://github.com/user-attachments/assets/8a1e7def-0654-493f-93b9-e53797fd8f39" />
 2.3. 总结
 
 2×2 网格划分的 RGA 标签重构效果最优，相比无网格基线，mAP50 从 0.73 提升至 0.821，同时推理速度也有提升，而更高的 4×4、6×6 网格划分会因标签冗余或特征过碎导致精度下降。
-<img width="371" height="151" alt="image" src="https://github.com/user-attachments/assets/af5c2bcf-3258-4220-8dc6-af45055891a1" />
+
+
+<img width="346" height="151" alt="image" src="https://github.com/user-attachments/assets/6fa3b1b1-e9d2-4f11-b3f3-11187df44b68" />
+
 
 3. NEU-DET 数据集上θ的敏感性分析
 
@@ -239,6 +244,7 @@ RGA重构选择的网格数都是为2x2。
 随着 θ 取值从 0.5 提升至 0.9，标签数量显著增加，模型 mAP50 也随之从 0.821 提升至 0.921，精度提升明显，同时 FPS 也同步上升。
 
 
-<img width="355" height="121" alt="image" src="https://github.com/user-attachments/assets/d666a51a-d7c9-4296-9744-ef453cf2ac61" />
+<img width="355" height="121" alt="image" src="https://github.com/user-attachments/assets/4c354aac-0d6c-4d5c-864e-b51e88a2472f" />
+
 
 
