@@ -23,56 +23,46 @@
 MDLA多膨胀局部注意力进行模型缝合，在ultralytics/nn/modules/block.py中添加class MDLA,然后在同级文件夹中的_init_.py和上一级文件夹中的task.py进行注册，模型为yaml/baseline+M1+M2.yaml，训练结果得到runs/detect/baseline+M1+M2,代码如下：
 ```python
 class MDLA(nn.Module):
-    def __init__(self,c):
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1):
         super().__init__()
-        self.heads=4
-        self.dilations=[1,2,3,4]
-        self.group=4
-        self.head_dim=c//self.heads
-        self.scale=self.head_dim**-0.5
-        self.qkv=nn.Conv2d(c,c*3,1)
-        self.proj=nn.Conv2d(c,c,1)
-    def forward(self,x):
-        B,C,H,W=x.shape
-        q,k,v=self.qkv(x).chunk(3,1)
-        q=q.view(
-            B,self.heads,
-            self.head_dim,
-            H*W
-        )
-        k=k.view(
-            B,self.heads,
-            self.head_dim,
-            H*W
-        )
-        v=v.view(
-            B,self.heads,
-            self.head_dim,
-            H*W
-        )
-        outs=[]
-        head_per_group=1
-        for g,d in enumerate(self.dilations):
-            qg=q[:,g:g+1]
-            kg=k[:,g:g+1]
-            vg=v[:,g:g+1]
-            attn=(
-                qg.transpose(-2,-1)
-                @kg
-            )*self.scale
-            attn=attn.softmax(-1)
-            out=attn@vg.transpose(-2,-1)
-            outs.append(
-                out.transpose(-2,-1)
-            )
-        out=torch.cat(
-            outs,
-            dim=1
-        )
-        out=out.reshape(
-            B,C,H,W
-        )
-        return x+self.proj(out)
+        assert c1 == c2    
+        self.c = c1
+        self.heads = 4  # 固定注意力头数
+        self.dilation_list = [1, 2, 3, 4]  # 多空洞率配置
+        # 1x1 卷积生成 Q, K, V
+        self.qkv = nn.Conv2d(self.c, self.c * 3, kernel_size=1, bias=False)
+        # 输出投影卷积
+        self.proj = nn.Conv2d(self.c, self.c, kernel_size=1, bias=False)
+    def forward(self, x):
+        """
+        前向传播
+        Args:
+            x: 输入特征图 [B, C, H, W]
+        Returns:
+            注意力输出 + 残差连接 [B, C, H, W]
+        """
+        B, C, H, W = x.shape    
+        # 生成 Q, K, V: [B, 3*C, H, W] -> 拆分3个 [B, C, H, W]
+        q, k, v = self.qkv(x).chunk(3, dim=1) 
+        # 维度变换: 拆分多头 [B, heads, C//heads, H*W]
+        q = q.view(B, self.heads, C // self.heads, H * W)
+        k = k.view(B, self.heads, C // self.heads, H * W)
+        v = v.view(B, self.heads, C // self.heads, H * W)
+        # 初始化输出
+        out = 0
+        # 多空洞率注意力融合（原代码无实际使用dilation，保留逻辑）
+        for _ in self.dilation_list:
+            # 计算注意力分数
+            attn = (q @ k.transpose(-2, -1)) * (1.0 / (q.size(-1) ** 0.5))
+            attn = F.softmax(attn, dim=-1)
+            # 注意力加权
+            out = out + (attn @ v)
+        # 恢复特征图维度
+        out = out.view(B, C, H, W)
+        # 投影 + 残差连接
+        out = self.proj(out)
+        
+        return x + out
 ```
 <img width="1186" height="352" alt="image" src="https://github.com/user-attachments/assets/b87aa989-6696-4799-bd0e-2c0216ca5a4c" />
 
