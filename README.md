@@ -23,29 +23,56 @@
 MDLA多膨胀局部注意力进行模型缝合，在ultralytics/nn/modules/block.py中添加class MDLA,然后在同级文件夹中的_init_.py和上一级文件夹中的task.py进行注册，模型为yaml/baseline+M1+M2.yaml，训练结果得到runs/detect/baseline+M1+M2,代码如下：
 ```python
 class MDLA(nn.Module):
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1):
+    def __init__(self,c):
         super().__init__()
-        assert c1 == c2
-        self.c = c1
-        self.heads = 4  # 固定头数
-        self.dilation_list = [1, 2, 3, 4]
-        
-        # 1x1 卷积
-        self.qkv = nn.Conv2d(self.c, self.c * 3, 1, bias=False)
-        self.proj = nn.Conv2d(self.c, self.c, 1, bias=False)
-
-    def forward(self, x):
-        B, C, H, W = x.shape
-        qkv = self.qkv(x).chunk(3, 1)  # [B, 3C, H, W]
-        q, k, v = map(lambda t: t.view(B, self.heads, C//self.heads, H*W), qkv)
-        out = 0
-        for d in self.dilation_list:
-            attn = (q @ k.transpose(-2, -1)) * (1.0 / (q.size(-1) ** 0.5))
-            attn = F.softmax(attn, dim=-1)
-            out = out + (attn @ v)
-        out = out.view(B, C, H, W)
-        out = self.proj(out)
-        return x + out
+        self.heads=4
+        self.dilations=[1,2,3,4]
+        self.group=4
+        self.head_dim=c//self.heads
+        self.scale=self.head_dim**-0.5
+        self.qkv=nn.Conv2d(c,c*3,1)
+        self.proj=nn.Conv2d(c,c,1)
+    def forward(self,x):
+        B,C,H,W=x.shape
+        q,k,v=self.qkv(x).chunk(3,1)
+        q=q.view(
+            B,self.heads,
+            self.head_dim,
+            H*W
+        )
+        k=k.view(
+            B,self.heads,
+            self.head_dim,
+            H*W
+        )
+        v=v.view(
+            B,self.heads,
+            self.head_dim,
+            H*W
+        )
+        outs=[]
+        head_per_group=1
+        for g,d in enumerate(self.dilations):
+            qg=q[:,g:g+1]
+            kg=k[:,g:g+1]
+            vg=v[:,g:g+1]
+            attn=(
+                qg.transpose(-2,-1)
+                @kg
+            )*self.scale
+            attn=attn.softmax(-1)
+            out=attn@vg.transpose(-2,-1)
+            outs.append(
+                out.transpose(-2,-1)
+            )
+        out=torch.cat(
+            outs,
+            dim=1
+        )
+        out=out.reshape(
+            B,C,H,W
+        )
+        return x+self.proj(out)
 ```
 <img width="1186" height="352" alt="image" src="https://github.com/user-attachments/assets/b87aa989-6696-4799-bd0e-2c0216ca5a4c" />
 
