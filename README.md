@@ -1,3 +1,5 @@
+## 一、对数据集NEU-DET的实验
+
 **实验环境与参数**
 
 实验采用 Ubuntu 22.04 系统，硬件为 NVIDIA RTX 4090 (48GB)，软件环境配置 Python 3.12、PyTorch 2.7.0、CUDA 12.8，基于 Ultralytics YOLO11 框架开展训练。训练参数设置如下：输入图像尺寸 200×200，批次大小 16，最大训练轮数 200，采用 SGD 优化器，初始学习率 0.01，动量 0.937，权重衰减 0.0005，并使用 Mosaic、随机翻转、随机擦除等数据增强策略，开启混合精度与数据缓存加速训练。
@@ -27,20 +29,13 @@ class MDLA(nn.Module):
         super().__init__()
         assert c1 == c2    
         self.c = c1
-        self.heads = 4  # 固定注意力头数
-        self.dilation_list = [1, 2, 3, 4]  # 多空洞率配置
-        # 1x1 卷积生成 Q, K, V
+        self.heads = 4  
+        self.dilation_list = [1, 2, 3, 4]  
+        # 1x1 卷积
         self.qkv = nn.Conv2d(self.c, self.c * 3, kernel_size=1, bias=False)
         # 输出投影卷积
         self.proj = nn.Conv2d(self.c, self.c, kernel_size=1, bias=False)
     def forward(self, x):
-        """
-        前向传播
-        Args:
-            x: 输入特征图 [B, C, H, W]
-        Returns:
-            注意力输出 + 残差连接 [B, C, H, W]
-        """
         B, C, H, W = x.shape    
         # 生成 Q, K, V: [B, 3*C, H, W] -> 拆分3个 [B, C, H, W]
         q, k, v = self.qkv(x).chunk(3, dim=1) 
@@ -50,16 +45,12 @@ class MDLA(nn.Module):
         v = v.view(B, self.heads, C // self.heads, H * W)
         # 初始化输出
         out = 0
-        # 多空洞率注意力融合（原代码无实际使用dilation，保留逻辑）
+        # 多空洞率注意力融合
         for _ in self.dilation_list:
-            # 计算注意力分数
             attn = (q @ k.transpose(-2, -1)) * (1.0 / (q.size(-1) ** 0.5))
             attn = F.softmax(attn, dim=-1)
-            # 注意力加权
             out = out + (attn @ v)
-        # 恢复特征图维度
         out = out.view(B, C, H, W)
-        # 投影 + 残差连接
         out = self.proj(out)
         
         return x + out
