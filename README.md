@@ -1,26 +1,26 @@
-## 一、对数据集NEU-DET的实验
+# 一、对数据集NEU-DET的实验
 
-**实验环境与参数**
+## **实验环境与参数**
 
 实验采用 Ubuntu 22.04 系统，硬件为 NVIDIA RTX 4090 (48GB)，软件环境配置 Python 3.12、PyTorch 2.7.0、CUDA 12.8，基于 Ultralytics YOLO11 框架开展训练。训练参数设置如下：输入图像尺寸 200×200，批次大小 16，最大训练轮数 200，采用 SGD 优化器，初始学习率 0.01，动量 0.937，权重衰减 0.0005，并使用 Mosaic、随机翻转、随机擦除等数据增强策略，开启混合精度与数据缓存加速训练。
 
-**实验结果**
+## **实验结果**
 
-1.NEU-DET 数据集上不同模块的消融研究（M1：RGA；M2：MDLA；M3：BiFN）
+### 1.NEU-DET 数据集上不同模块的消融研究（M1：RGA；M2：MDLA；M3：BiFN）
 
-1.1. baseline
+#### 1.1. baseline
 
 下采样功能用nn.AvgPool2d 替代（无卷积、纯池化），模型为yaml/baseline.yaml，训练结果得到runs/detect/baseline
 
 <img width="1188" height="353" alt="image" src="https://github.com/user-attachments/assets/51d55b88-fd58-4119-9d4a-ea5ba45a983f" />
 
-1.2. baseline+M1
+#### 1.2. baseline+M1
 
 对1.1中模型训练得到的结果Recall<0.5进行RGA重构（2x2，以下的训练一致），小于0.5的只有crazing，模型同1.1，训练结果得到runs/detect/baseline+M1
 <img width="1183" height="333" alt="image" src="https://github.com/user-attachments/assets/22f6f886-e363-477c-88c3-5f36b57b489f" />
 
 
-1.3. baseline+M1+M2
+#### 1.3. baseline+M1+M2
 
 MDLA多膨胀局部注意力进行模型缝合，在ultralytics/nn/modules/block.py中添加class MDLA,然后在同级文件夹中的_init_.py和上一级文件夹中的task.py进行注册，模型为yaml/baseline+M1+M2.yaml，训练结果得到runs/detect/baseline+M1+M2,代码如下：
 ```python
@@ -57,13 +57,13 @@ class MDLA(nn.Module):
 ```
 <img width="1186" height="352" alt="image" src="https://github.com/user-attachments/assets/b87aa989-6696-4799-bd0e-2c0216ca5a4c" />
 
-1.4. baseline+M1+M2+M3(conv)
+#### 1.4. baseline+M1+M2+M3(conv)
 
 模型为yaml/baseline+M1+M2+M3(conv).yaml，训练结果得到runs/detect/baseline+M1+M2+M3(conv)
 
 <img width="1182" height="356" alt="image" src="https://github.com/user-attachments/assets/591a6f8a-dcb4-4484-a6b6-a49e72eba00d" />
 
-1.5. baseline+M1+M2+M3(scdown)
+#### 1.5. baseline+M1+M2+M3(scdown)
 
 SCDown下采样,与1.3相同在block.py中修改class SCDown的代码,模型为yaml/baseline+M1+M2+M3(scdown).yaml，训练结果得到runs/detect/baseline+M1+M2+M3(scdown),代码如下：
 ```python
@@ -80,14 +80,14 @@ class SCDown(nn.Module):
 ```
 <img width="1171" height="367" alt="image" src="https://github.com/user-attachments/assets/0f7025f9-3cf6-4937-989a-e3e58b343533" />
 
-1.6. 总结
+#### 1.6. 总结
 
 RGA标签重构可显著提升YOLO11的检测精度，在此基础上引入MDLA模块能进一步提升mAP50，而BiFN却导致实验结果的下降。
 
 <img width="850" height="193" alt="image" src="https://github.com/user-attachments/assets/0ae49d9f-1b5d-44df-9eb9-6d3d5cbad28a" />
 
 
-2. NEU-DET 数据集上的网格实验
+### 2. NEU-DET 数据集上的网格实验
 
 RGA标签重构代码如下，改变标签类别只需修改BOTTLENECK_CLASSES的值，值从0开始以此代表以下数组中的元素：['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']；改变重构的维数只需要修改GRID_SIZE的值。
 ```python
@@ -196,15 +196,16 @@ print("RGA标签重构完成！")
 print(f"网格划分: {GRID_SIZE}×{GRID_SIZE}")
 print(f"瓶颈类别 ID: {sorted(BOTTLENECK_CLASSES)}")
 ```
-2.1. No Grid与2x2分别对应1.1和1.2的内容
-2.2. 4x4和6x6
+### 2.1. No Grid与2x2分别对应1.1和1.2的内容
+### 2.2. 4x4和6x6
 
 模型为yaml/baseline+M1+M2.yaml，训练结果分别得到runs/detect/baseline+M1+M2(16)和runs/detect/baseline+M1+M2(16)
 
 <img width="1178" height="335" alt="image" src="https://github.com/user-attachments/assets/5bf64e61-b529-43ab-8bf9-0f2bf663910a" />
 
 <img width="1201" height="363" alt="image" src="https://github.com/user-attachments/assets/8a1e7def-0654-493f-93b9-e53797fd8f39" />
-2.3. 总结
+
+### 2.3. 总结
 
 2×2 网格划分的 RGA 标签重构效果最优，相比无网格基线，mAP50 从 0.73 提升至 0.821，同时推理速度也有提升，而更高的 4×4、6×6 网格划分会因标签冗余或特征过碎导致精度下降。
 
@@ -212,30 +213,31 @@ print(f"瓶颈类别 ID: {sorted(BOTTLENECK_CLASSES)}")
 <img width="346" height="151" alt="image" src="https://github.com/user-attachments/assets/6fa3b1b1-e9d2-4f11-b3f3-11187df44b68" />
 
 
-3. NEU-DET 数据集上θ的敏感性分析
+## 3. NEU-DET 数据集上θ的敏感性分析
 
 在1.1中各类别标签进行评估后的Recall为：['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']=[0.182,0.745,0.884,0.721,0.632,0.951],因此θ取值为[0.5,0.7,0.9]。
 
 RGA重构选择的网格数都是为2x2。
 
-3.1. θ为0.5与1.3对应。
+### 3.1. θ为0.5与1.3对应。
 
-3.2. θ为0.7
+### 3.2. θ为0.7
 
 进行RGA重构的有crazing,rolled-in_scale。
 <img width="1182" height="352" alt="image" src="https://github.com/user-attachments/assets/aa5c294e-d903-4f07-ac63-7239092b32d8" />
 
-3.3. θ为0.9
+### 3.3. θ为0.9
 
 进行RGA重构的有crazing,inclusion,patches,pitted_surface,rolled-in_scale。
 <img width="1180" height="352" alt="image" src="https://github.com/user-attachments/assets/c8a84458-daa0-4324-bea4-2a365dde5f8a" />
 
-3.4. 总结
+### 3.4. 总结
 
 随着 θ 取值从 0.5 提升至 0.9，标签数量显著增加，模型 mAP50 也随之从 0.821 提升至 0.921，精度提升明显，同时 FPS 也同步上升。
 
 
 <img width="355" height="121" alt="image" src="https://github.com/user-attachments/assets/4c354aac-0d6c-4d5c-864e-b51e88a2472f" />
 
+# 二、对数据集GC10-DET的实验
 
 
